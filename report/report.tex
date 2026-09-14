@@ -83,4 +83,37 @@ Rearranging \ref{equ:2} for $R$, given a target $t_{release}$ and a chosen $C$:
     An $83k\Omega$ resistor with a 100nF capacitor gives a reset hold-off of approximately 10ms. Keeping C at the plotting value of
 \end{enumerate}
 
+\section{Applications and Limitations}
+\subsection{Application}
+The RC-only power-on-reset circuit is an easy low-cost addition to any product in need of a reset option. Example being a stud sensor like the Zircon HD55, which would need to reset very time the sensor is activated to clear any old readings that could cause unpredictable alterations or unprecedented situations from happening and causing issues with the current readings. So, to keep the HD55 accessible and small form, a RC-only POR is the most feasible option. For this product, I would specify the use of a $100k\\Omega$ resistor with a $0.1\mu$F to give a $t_{release}$ of 10ms, which allows the stud sensor to make sure it achieved internal stability before starting the sensing process.
+
+\subsection{Limitations}
+\begin{enumerate}
+    \item\textit{Component Tolerance:} Real resistors and capacitors are not exact. This derivation shows how to bound the effect: Since $t_{release} = -RCln(1-V_{IH}/V_0) = kRC$ for a constant $k=-ln(1-V_{IH}/V_0)$ that does not depend on R or C, small changes $\Delta{R}$ and $\Delta{C}$ propagate as:
+    
+    \begin{equation}
+    \begin{split}
+        t+\Delta{t}=k(R+\Delta{R})(C+\Delta{C})\\=kRC+kR\Delta{C}+kC\Delta{R}+k\Delta{R}\Delta{C}\\\approx{kRC+kR\Delta{C}+kC\Delta{R}},
+        \text{(drop the 2nd-order term)}\\\text{so, dividing by t = kRC:}\\\frac{\Delta{t}}{t}\approx{\frac{\Delta{R}}{R}+\frac{\Delta{C}}{C}}.
+    \end{split}
+    \end{equation}
+
+    The relative timing error is, to first order, just the sum of the two component tolerances:
+    
+    \begin{equation}
+        \frac{\Delta{t}}{t}\approx{0.10+0.10=0.20,}
+    \end{equation}
+    
+    meaning the true release time could fall anywhere from 8ms to 12ms even though the nominal calculation says exactly 10ms.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{rc_tolerance.pdf}
+    \caption{Capacitor charging curves for the HD55 POR circuit (R = 100 k$\Omega$, C = 0.1 $\mu$F) under nominal, fastest-case, and slowest-case component tolerances (\(\pm5\%\) resistor, \(\pm20\%\) capacitor).}
+    \label{fig:rc_tolerance}
+    \end{figure}
+    
+    \item\textit{Sensitivity to a Slowly-Rising Supply:}
+    A slow $V_{CC}$ ramp can invalidate the step-input assumption behind \ref{equ:2} and leave the pin lingering near $V_{IH}$. This causes the basic timing mechanism of the RC network to fail, leading to a corrupted boot or glitched state.
+\end{enumerate}
 \end{document}
